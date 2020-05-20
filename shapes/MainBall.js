@@ -28,7 +28,7 @@ function MainBall(fp, globalSpeed, canvasWidth, canvasHeight, posX, posY, pivots
 	this.status = 0;
 	this.globalSpeed = globalSpeed;
 	this.isStanding = true;
-	this.maxSpeed = 300 * fp;
+	this.maxSpeedSq = 300 * fp * fp;
 	this.maxFallingSpeed = 18 * fp;
 
 	// Charge
@@ -131,8 +131,8 @@ MainBall.prototype.update = function() {
 
 	// limit the max speed
 	let currSpeed = this.velX * this.velX + this.velY * this.velY;
-	if (currSpeed >= this.maxSpeed) {
-		let scaleRatio = Math.sqrt(this.maxSpeed / currSpeed);
+	if (currSpeed >= this.maxSpeedSq) {
+		let scaleRatio = Math.sqrt(this.maxSpeedSq / currSpeed);
 		this.velX *= scaleRatio;
 		this.velY *= scaleRatio;
 	}
