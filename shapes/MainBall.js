@@ -62,11 +62,11 @@ MainBall.prototype.update = function() {
 		}
 	} else if (this.status == 1) {
 		// charging
-		this.velY += this.accelY * this.globalSpeed["ratio"];
 		this.chargeCounter++;
 		if (this.chargeCounter >= this.defaultChargeTimer) {
 			this.globalSpeed["ratio"] = 0.2;
 		}
+		this.velY += this.accelY * this.globalSpeed["ratio"];
 		if (this.chargingDistance >= 50 * this.fp) {
 			this.chargingDistance += this.chargingSpeed;
 		} else {
