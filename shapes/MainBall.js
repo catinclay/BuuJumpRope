@@ -29,7 +29,7 @@ function MainBall(fp, globalSpeed, canvasWidth, canvasHeight, posX, posY, pivots
 	this.globalSpeed = globalSpeed;
 	this.isStanding = true;
 	this.maxSpeedSq = 300 * fp * fp;
-	this.maxFallingSpeed = 18 * fp;
+	this.maxFallingSpeed = 14 * fp;
 
 	// Charge
 	this.chargeCounter = 0;
@@ -82,8 +82,8 @@ MainBall.prototype.update = function() {
 
 		// show a "delay" when first enter this status
 		if(this.currentFiringTimer == 0) {
-			this.velX /= 1.5;
-			this.velY /= 2;
+			this.velX /= 2;
+			this.velY /= 3;
 		}
 
 		this.chargingDistance = this.defaultChargingDistance;
