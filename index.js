@@ -2,7 +2,7 @@ var game = new Game();
 var gameEngine = new GameEngine();
 var imageManager = new ImageManager();
 var soundManager = new SoundManager();
-gameEngine.init(game, imageManager, soundManager, 30);
+gameEngine.init(game, imageManager, soundManager, 60);
 
 soundManager.registerSound({name:'failedSound', src:'sounds/failedSound.mp3'});
 

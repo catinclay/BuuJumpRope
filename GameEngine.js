@@ -3,7 +3,9 @@ function GameEngine() {}
 GameEngine.prototype.init = function(game, imageManager, soundManager, fps) {
 	this.game = game;
 	this.theCanvas = document.getElementById("mainCanvas");
+	this.fp = 1;
 	if(this.checkMobile()){
+		this.fp = 2;
 		this.theCanvas.width *=2;
 		this.theCanvas.height *=2;
 	}
@@ -12,8 +14,10 @@ GameEngine.prototype.init = function(game, imageManager, soundManager, fps) {
 	this.addListeners();
 	this.fps = fps;
 	this.sounds = {};
-	this.game.init(this.theCanvas.width, this.theCanvas.height, imageManager, soundManager);
+	this.game.init(this.fp, this.theCanvas.width, this.theCanvas.height, imageManager, soundManager);
+	this.lastUpdate = Date.now();
 }
+
 
 GameEngine.prototype.checkMobile = function() {
   	var check = false;
