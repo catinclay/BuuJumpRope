@@ -1,6 +1,7 @@
 // Simple class example
 
-function ScoreBoard(canvasWidth, canvasHeight, camera) {
+function ScoreBoard(fp, canvasWidth, canvasHeight, camera) {
+	this.fp = fp;
 	this.canvasWidth = canvasWidth;
 	this.canvasHeight = canvasHeight;
 	this.camera = camera;
@@ -16,7 +17,7 @@ ScoreBoard.prototype.update = function() {
 
 //A function for drawing the particle.
 ScoreBoard.prototype.drawToContext = function(theContext) {
-	theContext.font = "80px Comic Sans MS";
+	theContext.font =80*this.fp+"px Comic Sans MS";
 	theContext.fillStyle = "#99999955";
 	theContext.textAlign = "center";
 	theContext.fillText(this.score, this.canvasWidth/2, this.canvasHeight/5);

@@ -1,6 +1,7 @@
 // Simple class example
 
-function GameOverScene(canvasWidth, canvasHeight) {
+function GameOverScene(fp, canvasWidth, canvasHeight) {
+	this.fp = fp;
 	this.canvasWidth = canvasWidth;
 	this.canvasHeight = canvasHeight;
 	this.isGameOver = false;
@@ -30,11 +31,11 @@ GameOverScene.prototype.drawToContext = function(theContext) {
 	}
 
 	if (this.readyToRestart()) {
-		theContext.font = "80px Comic Sans MS";
+		theContext.font = 80*this.fp+"px Comic Sans MS";
 		theContext.fillStyle = "#000000";
 		theContext.textAlign = "center";
 		theContext.fillText(this.score, this.canvasWidth/2, this.canvasHeight/2);
-		theContext.font = "50px Comic Sans MS";
+		theContext.font = 50+this.fp+"px Comic Sans MS";
 		theContext.fillStyle = "#000000";
 		theContext.textAlign = "center";
 		theContext.fillText("Retry", this.canvasWidth/2, this.canvasHeight*2/3);
