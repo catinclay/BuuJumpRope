@@ -28,8 +28,8 @@ function MainBall(fp, globalSpeed, canvasWidth, canvasHeight, posX, posY, pivots
 	this.status = 0;
 	this.globalSpeed = globalSpeed;
 	this.isStanding = true;
-	this.maxSpeed = 160 * fp;
-	this.maxFallingSpeed = 5 * fp;
+	this.maxSpeed = 300 * fp;
+	this.maxFallingSpeed = 18 * fp;
 
 	// Charge
 	this.chargeCounter = 0;

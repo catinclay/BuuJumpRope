@@ -19,7 +19,7 @@ Camera.prototype.update = function() {
 	// 	this.camMove(this.canvasHeight/5 - this.mainBall.y);
 	// } else 
 	if (this.mainBall.y <= this.canvasHeight / 3 ) {
-		this.camMove(8 * this.fp);
+		this.camMove(10 * this.fp);
 	} else if (this.mainBall.y <= this.canvasHeight / 2 ) {
 		this.camMove(6 * this.fp);
 	} else if (this.mainBall.y <= this.canvasHeight * 4 / 6 ) {
