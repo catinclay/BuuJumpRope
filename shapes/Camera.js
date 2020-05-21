@@ -1,8 +1,9 @@
 // Simple class example
 
-function Camera(fp, canvasWidth, canvasHeight, mainBall, pivots) {
+function Camera(fp, globalSpeed, canvasWidth, canvasHeight, mainBall, pivots, currentCombatStatus) {
 	this.fp = fp;
-	this.baseLine = 0;
+	this.globalSpeed = globalSpeed;
+	this.baseLine = -35 * this.fp;
 	this.hellOffset = -500 * this.fp;
 	
 	this.canvasWidth = canvasWidth;
@@ -11,6 +12,8 @@ function Camera(fp, canvasWidth, canvasHeight, mainBall, pivots) {
 	this.mainBall = mainBall;
 	this.pivots = pivots;
 	this.score = 0;
+
+	this.currentCombatStatus = currentCombatStatus;
 }
 
 
@@ -22,35 +25,38 @@ Camera.prototype.update = function() {
 		this.camMove(10 * this.fp);
 	} else if (this.mainBall.y <= this.canvasHeight / 2 ) {
 		this.camMove(6 * this.fp);
-	} else if (this.mainBall.y <= this.canvasHeight * 4 / 6 ) {
-		this.camMove(Math.min(this.canvasHeight * 4 / 6 - this.mainBall.y, 2 * this.fp));
-	} else if (this.mainBall.y <= this.canvasHeight * 6 / 10 ) {
-		this.camMove(Math.min(this.canvasHeight * 6 / 10 - this.mainBall.y, 1 * this.fp));
+	} else if (this.mainBall.y <= this.canvasHeight * 12 / 20 ) {
+		// this.camMove(Math.min(this.canvasHeight * 12 / 20 - this.mainBall.y, 5 * this.fp));
+		this.camMove(4 * this.fp);
+	} else if (this.mainBall.y <= this.canvasHeight * 14 / 20 ) {
+		this.camMove(Math.min(this.canvasHeight * 14 / 20 - this.mainBall.y, 2 * this.fp));
 	} else if(this.mainBall.y >= this.canvasHeight*17/20) {
 		this.camMove(this.canvasHeight*17/20 - this.mainBall.y);	
-	} else if (this.mainBall.y >= this.canvasHeight*13/20) {
-		this.camMove(Math.max(this.canvasHeight*13/20 - this.mainBall.y, -2 * this.fp));	
+	} else if (this.mainBall.y >= this.canvasHeight*14/20) {
+		this.camMove(Math.max(this.canvasHeight*14/20 - this.mainBall.y, -2 * this.fp));	
 	}
-	if (this.baseLine <= 0) {
-		this.increaseBaseLine(3);
-	} else if (this.baseLine <= 35 * this.fp){
-		this.increaseBaseLine(4/5);
+	if (this.baseLine <= -35 * this.fp) {
+		this.increaseBaseLine(3, 1);
+	} else if (this.baseLine <= 45 * this.fp){
+		this.increaseBaseLine(4/5, (this.globalSpeed["ratio"] + 2)/3);
 	} else {
-		this.increaseBaseLine(1/5);
+		this.increaseBaseLine(2/5, (this.globalSpeed["ratio"] + 1)/2);
 	}
 }
 
 Camera.prototype.camMove = function(dy) {
 	for (var i = this.pivots.length - 1; i >= 0; i--) {
 		this.pivots[i].y += dy;
-		if (this.pivots[i].y > this.canvasHeight - this.hellOffset) {
+		if (this.pivots[i].y > this.getDeadLine()) {
+			this.pivots[i].isUsed = true;
+		} else if (this.pivots[i].y > this.canvasHeight - this.hellOffset) {
 			this.pivots[i].destroySoon = true;
 		}
 	}
 	this.mainBall.y += dy;
 	this.baseLine -= dy;
 	if (this.baseLine < this.hellOffset) {
-		this.increaseBaseLine(this.hellOffset - this.baseLine);
+		this.increaseBaseLine(this.hellOffset - this.baseLine, 1);
 	}
 	this.baseLine = this.baseLine <= this.hellOffset? this.hellOffset : this.baseLine;
 }
@@ -74,13 +80,17 @@ Camera.prototype.drawToContext = function(theContext) {
 	theContext.fillRect(0, lineY, this.canvasWidth, 500 * this.fp);
 }
 
-Camera.prototype.increaseBaseLine = function(dy) {
-	this.score += dy;
-	this.baseLine += dy * this.fp;
+Camera.prototype.increaseBaseLine = function(dy, speedRatio) {
+	this.score += dy * speedRatio;
+	this.baseLine += dy * this.fp * speedRatio;
 }
 
 Camera.prototype.getScore = function() {
 	return Math.floor(this.score/100);
+}
+
+Camera.prototype.getCombo = function() {
+	return this.mainBall.getCombo();
 }
 
 Camera.prototype.getDeadLine = function() {

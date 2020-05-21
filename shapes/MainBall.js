@@ -28,12 +28,12 @@ function MainBall(fp, globalSpeed, canvasWidth, canvasHeight, posX, posY, pivots
 	this.status = 0;
 	this.globalSpeed = globalSpeed;
 	this.isStanding = true;
-	this.maxSpeedSq = 300 * fp * fp;
+	this.defaultMaxSpeedSq = 120 * fp * fp;
 	this.maxFallingSpeed = 14 * fp;
 
 	// Charge
 	this.chargeCounter = 0;
-	this.defaultChargeTimer = 4;
+	this.defaultChargeTimer = 12;
 	this.defaultChargingDistance = 4 * this.fp;
 	this.chargingDistance = this.defaultChargingDistance;
 	this.chargingSpeed = 4 * this.fp;
@@ -46,6 +46,9 @@ function MainBall(fp, globalSpeed, canvasWidth, canvasHeight, posX, posY, pivots
 
 	// Pulling
 	this.pullingPower = 2;
+
+	// Combo
+	this.comboCount = 0;
 }
 
 MainBall.prototype.update = function() {
@@ -57,7 +60,7 @@ MainBall.prototype.update = function() {
 		this.velY += this.accelY * this.globalSpeed["ratio"];
 		// clean hooked pivot
 		if (this.hookedPivot != undefined) {
-			this.hookedPivot.isHooked = false;
+			this.hookedPivot.setHooked(false);
 			this.hookedPivot = undefined;
 		}
 	} else if (this.status == 1) {
@@ -74,7 +77,7 @@ MainBall.prototype.update = function() {
 		}
 		// clean hooked pivot
 		if (this.hookedPivot != undefined) {
-			this.hookedPivot.isHooked = false;
+			this.hookedPivot.setHooked(false);
 			this.hookedPivot = undefined;
 		}
 	} else if (this.status == 2) {
@@ -131,8 +134,11 @@ MainBall.prototype.update = function() {
 
 	// limit the max speed
 	let currSpeed = this.velX * this.velX + this.velY * this.velY;
-	if (currSpeed >= this.maxSpeedSq) {
-		let scaleRatio = Math.sqrt(this.maxSpeedSq / currSpeed);
+	let comboBonus = this.comboCount-1 > 20 ? 20: this.comboCount-1;
+	comboBonus = Math.floor(comboBonus / 5) * 5;
+	let maxSpeedSq = this.defaultMaxSpeedSq + comboBonus * 20 * this.fp * this.fp;
+	if (currSpeed >= maxSpeedSq) {
+		let scaleRatio = Math.sqrt(maxSpeedSq / currSpeed);
 		this.velX *= scaleRatio;
 		this.velY *= scaleRatio;
 	}
@@ -188,20 +194,27 @@ MainBall.prototype.fire = function() {
 	}
 	if (targetPivot == undefined) {
 		// no target, nature falling.
+		this.comboCount = 0;
 		this.status = 0;
 		return;
 	} else {
+		this.comboCount++;
 		// has target, firing
 		this.status = 2;
-		targetPivot.isHooked = true;
+		targetPivot.setHooked(true);
 		targetPivot.isUsed = true;
 		this.hookedPivot = targetPivot;
 	}
 }
 
+MainBall.prototype.getCombo = function(){
+	return this.comboCount;
+}
+
 MainBall.prototype.disFP = function(p) {
 	return Math.sqrt((this.x - p.x) * (this.x - p.x) + (this.y - p.y) * (this.y - p.y));
 }
+
 
 //A function for drawing the particle.
 MainBall.prototype.drawToContext = function(theContext) {
@@ -230,27 +243,36 @@ MainBall.prototype.drawToContext = function(theContext) {
 		theContext.fill();
 	}
 
+	// Draw the line
+	let ropeLevel = Math.floor((this.comboCount-1 > 20 ? 20: this.comboCount-1)/5);
+	let ropeColor = "#008800";
+	if (ropeLevel >= 2) {
+		ropeColor = "#880000"
+	} else if (ropeLevel >= 1) {
+		ropeColor = "#000088"
+	}
+
 	// firing
 	if (this.status == 2) {
 		// draw the line
 		let dx = (this.hookedPivot.x - this.x) * this.currentFiringTimer / this.defaultFiringTimer;
 		let dy = (this.hookedPivot.y - this.y) * this.currentFiringTimer / this.defaultFiringTimer;
-		theContext.strokeStyle = "#000088"
+		theContext.strokeStyle = ropeColor
 		theContext.beginPath();
 	 	theContext.moveTo(this.x, this.y);
     	theContext.lineTo(this.x + dx, this.y + dy);
-		theContext.lineWidth = 2 * this.fp;
+		theContext.lineWidth = (2 + ropeLevel) * this.fp;
 		theContext.stroke();
 	}
 
 	// pulling
 	if (this.status == 3) {
 		// draw the line
-		theContext.strokeStyle = "#000088"
+		theContext.strokeStyle = ropeColor
 		theContext.beginPath();
 	 	theContext.moveTo(this.x, this.y);
     	theContext.lineTo(this.hookedPivot.x, this.hookedPivot.y);
-		theContext.lineWidth = 2 * this.fp;
+		theContext.lineWidth = (2 + ropeLevel) * this.fp;
 		theContext.stroke();
 	}
 }

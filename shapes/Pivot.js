@@ -1,6 +1,6 @@
 // Simple class example
 
-function Pivot(fp, globalSpeed, posX, posY, radius) {
+function Pivot(fp, globalSpeed, posX, posY, radius, pivotColor) {
 	this.fp = fp;
 	this.globalSpeed = globalSpeed;
 	this.x = posX * fp;
@@ -9,7 +9,7 @@ function Pivot(fp, globalSpeed, posX, posY, radius) {
 	this.velY = 0;
 	this.accelX = 0;
 	this.accelY = 0;
-	this.color = "#009900";
+	this.color = pivotColor;
 	this.strokeStyle = "#005500"
 
 	this.aimColor = "#FFFF00";
@@ -25,6 +25,10 @@ function Pivot(fp, globalSpeed, posX, posY, radius) {
 	this.isUsed = false;
 
 	this.destroySoon = false;
+}
+
+Pivot.prototype.setHooked = function(isHooked) {
+	this.isHooked = isHooked;
 }
 
 //A function for drawing the particle.
@@ -61,8 +65,6 @@ Pivot.prototype.drawToContext = function(theContext) {
 	theContext.fill();
 	theContext.lineWidth = 2 * this.fp;
 	theContext.stroke();
-
-
 }
 
 Pivot.prototype.shouldDestroy = function(theContext) {
