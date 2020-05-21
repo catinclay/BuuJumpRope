@@ -1,7 +1,7 @@
 function Game(){}
 
 Game.prototype.init = function(fp, canvasWidth, canvasHeight, imageManager, soundManager){
-	console.log("version: 1.06")
+	console.log("version: 1.07")
 	// flexible pixel.
 	this.fp = fp;
 	this.canvasWidth = canvasWidth;

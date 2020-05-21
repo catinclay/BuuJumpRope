@@ -33,7 +33,7 @@ function MainBall(fp, globalSpeed, canvasWidth, canvasHeight, posX, posY, pivots
 
 	// Charge
 	this.chargeCounter = 0;
-	this.defaultChargeTimer = 10;
+	this.defaultChargeTimer = 4;
 	this.defaultChargingDistance = 4 * this.fp;
 	this.chargingDistance = this.defaultChargingDistance;
 	this.chargingSpeed = 4 * this.fp;
@@ -170,6 +170,13 @@ MainBall.prototype.charge = function() {
 MainBall.prototype.fire = function() {
 	// return if not charging
 	if (this.status != 1) { return; }
+
+	// check if charge long enough
+	if (this.chargeCounter < this.defaultChargeTimer) {
+		this.status = 0;
+		return;
+	}
+
 	this.currentFiringTimer = 0;
 	let targetPivot;
 	for (var i = this.pivots.length - 1; i >= 0; i--) {
@@ -207,9 +214,8 @@ MainBall.prototype.drawToContext = function(theContext) {
 	theContext.lineWidth = 2 * this.fp;
 	theContext.stroke();
 
-	
 	// charging
-	if (this.status == 1) {
+	if (this.status == 1 && this.chargeCounter >= this.defaultChargeTimer) {
 		// Draws the charging circle
 		theContext.fillStyle = "#00000066";
 		theContext.beginPath();
