@@ -117,8 +117,9 @@ MainBall.prototype.update = function() {
 			} else {
 				// if not, charge LB
 				let mockCombo = this.comboCount > 7? 7 : this.comboCount;
-				let addLB = 3 + (mockCombo * mockCombo * mockCombo)/49 + Math.max(0, this.comboCount - 7);
+				let addLB = 2 + (mockCombo * mockCombo * Math.sqrt(mockCombo))/10 + Math.max(0, this.comboCount - 7)/4;
 				this.limitBreakerCounter += addLB;
+				console.log(addLB);
 			}
 		}
 
@@ -144,7 +145,7 @@ MainBall.prototype.update = function() {
 		// limit the max speed
 		let currSpeed = this.velX * this.velX + this.velY * this.velY;
 		let comboBonus = Math.floor((this.comboCount > 20 ? 20: this.comboCount)/5);
-		let scoreBonus = Math.floor(this.score/200);
+		let scoreBonus = Math.floor(this.score);
 		let maxSpeedSq = this.defaultMaxSpeedSq + comboBonus * 80 * this.fp * this.fp + scoreBonus * this.fp * this.fp;
 		if (currSpeed >= maxSpeedSq) {
 			let scaleRatio = Math.sqrt(maxSpeedSq / currSpeed);

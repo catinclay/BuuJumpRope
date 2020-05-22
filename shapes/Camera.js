@@ -11,7 +11,7 @@ function Camera(fp, globalSpeed, canvasWidth, canvasHeight, mainBall, pivots, cu
 
 	this.mainBall = mainBall;
 	this.pivots = pivots;
-	this.score = 0;
+	this.rawScore = 0;
 
 	this.currentCombatStatus = currentCombatStatus;
 
@@ -24,11 +24,12 @@ Camera.prototype.update = function() {
 	if (this.mainBall.hookedPivot != undefined && this.mainBall.hookedPivot.limitBreakCounter > 0) {
 		let dy = (this.canvasHeight*2/5 - this.mainBall.hookedPivot.y)/5;
 		this.camMove(dy);
-		this.score += dy;
+		this.rawScore += dy;
 		this.isLimitBreaking = true;
 		return;
 	}
-
+	// update hellOffset
+	this.hellOffset = (-500 - this.getScore()) * this.fp;
 	// After limit breaking
 	if (this.isLimitBreaking) {
 		if(this.mainBall.y >= this.canvasHeight*17/20) {
@@ -107,13 +108,13 @@ Camera.prototype.drawToContext = function(theContext) {
 }
 
 Camera.prototype.increaseBaseLine = function(dy, speedRatio) {
-	this.score += dy * speedRatio;
+	this.rawScore += dy * speedRatio;
 	this.baseLine += dy * this.fp * speedRatio;
-	this.mainBall.setScore(this.score);
+	this.mainBall.setScore(this.getScore());
 }
 
 Camera.prototype.getScore = function() {
-	return Math.floor(this.score/200);
+	return Math.floor(this.rawScore/200);
 }
 
 Camera.prototype.getCombo = function() {
