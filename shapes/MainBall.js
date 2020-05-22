@@ -119,7 +119,6 @@ MainBall.prototype.update = function() {
 				let mockCombo = this.comboCount > 7? 7 : this.comboCount;
 				let addLB = 3 + (mockCombo * mockCombo * mockCombo)/49 + Math.max(0, this.comboCount - 7);
 				this.limitBreakerCounter += addLB;
-				console.log(this.comboCount+":"+addLB);
 			}
 		}
 
