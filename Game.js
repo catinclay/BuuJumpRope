@@ -1,7 +1,7 @@
 function Game(){}
 
 Game.prototype.init = function(fp, canvasWidth, canvasHeight, imageManager, soundManager){
-	console.log("version: 1.08")
+	console.log("version: 1.09") // clean David test
 	// flexible pixel.
 	this.fp = fp;
 	this.canvasWidth = canvasWidth;
@@ -68,7 +68,7 @@ Game.prototype.getNewPivot = function(x, y, r) {
 		pivotColor = "#1111EE99";
 
 	}
-	return new Pivot(this.fp, this.globalSpeed, x, y, r, pivotColor);
+	return new Pivot(this.fp, this.globalSpeed, this.canvasWidth, this.canvasHeight, x, y, r, pivotColor);
 }
 
 Game.prototype.getExtraPivotRatio = function() {
@@ -129,7 +129,7 @@ Game.prototype.inputDownListener = function(touchX, touchY) {
 	if (this.gameOverScene.readyToRestart()) {
 		this.initGame();
 	} else {
-		this.mainBall.charge(); // charging
+		this.mainBall.inputDown(); // charging
 	}
 }
 
@@ -137,5 +137,5 @@ Game.prototype.inputMoveListener = function(touchX, touchY) {
 }
 
 Game.prototype.inputUpListener = function(touchX, touchY) {
-	this.mainBall.fire();
+	this.mainBall.inputUp();
 }

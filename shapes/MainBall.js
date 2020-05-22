@@ -28,6 +28,7 @@ function MainBall(fp, globalSpeed, canvasWidth, canvasHeight, posX, posY, pivots
 	this.status = 0;
 	this.globalSpeed = globalSpeed;
 	this.isStanding = true;
+
 	this.defaultMaxSpeedSq = 120 * fp * fp;
 	this.maxFallingSpeed = 14 * fp;
 
@@ -49,6 +50,10 @@ function MainBall(fp, globalSpeed, canvasWidth, canvasHeight, posX, posY, pivots
 
 	// Combo
 	this.comboCount = 0;
+
+	// Limit breaker
+	this.defaultLimitBreaker = 100;
+	this.limitBreakerCounter = 0;
 }
 
 MainBall.prototype.update = function() {
@@ -83,10 +88,12 @@ MainBall.prototype.update = function() {
 	} else if (this.status == 2) {
 		// firing
 
-		// show a "delay" when first enter this status
+		// First enter this status
 		if(this.currentFiringTimer == 0) {
+			// show a "delay" when first enter this status
 			this.velX /= 2;
 			this.velY /= 3;
+			
 		}
 
 		this.chargingDistance = this.defaultChargingDistance;
@@ -96,6 +103,17 @@ MainBall.prototype.update = function() {
 		if (this.currentFiringTimer >= this.defaultFiringTimer) {
 			this.status = 3;
 			this.currentFiringTimer = 0;
+			// Check if LB is full first
+			if (this.limitBreakerCounter == this.defaultLimitBreaker) {
+				this.limitBreakerCounter = 0;
+				let comboBonus = Math.floor((this.comboCount-1 > 20 ? 20: this.comboCount-1)/5);
+				this.hookedPivot.setLimitBreakCounter(1000 + 200 * comboBonus);
+			} else {
+				// if not, charge LB
+				let addLB = 2 + (this.comboCount > 10? 10 : this.comboCount);
+				this.limitBreakerCounter += addLB;
+				this.limitBreakerCounter = Math.min(this.limitBreakerCounter, this.defaultLimitBreaker);
+			}
 		}
 
 	} else if (this.status == 3) {
@@ -115,6 +133,20 @@ MainBall.prototype.update = function() {
 		let ay = (this.hookedPivot.y - this.y) / dist;
 		this.velX += ax * this.globalSpeed["ratio"];
 		this.velY += ay * this.globalSpeed["ratio"];
+
+
+		// limit the max speed
+		let currSpeed = this.velX * this.velX + this.velY * this.velY;
+		let comboBonus = Math.floor((this.comboCount-1 > 20 ? 20: this.comboCount-1)/5);
+		let maxSpeedSq = this.defaultMaxSpeedSq + comboBonus * 80 * this.fp * this.fp;
+		if (currSpeed >= maxSpeedSq) {
+			let scaleRatio = Math.sqrt(maxSpeedSq / currSpeed);
+			this.velX *= scaleRatio;
+			this.velY *= scaleRatio;
+		}
+
+		// LimitBreak!
+		this.hookedPivot.triggerLimitBreak(comboBonus);
 	}
 
 	if (this.isStanding && this.velY > 0) {
@@ -132,16 +164,6 @@ MainBall.prototype.update = function() {
 		}
 	}
 
-	// limit the max speed
-	let currSpeed = this.velX * this.velX + this.velY * this.velY;
-	let comboBonus = this.comboCount-1 > 20 ? 20: this.comboCount-1;
-	comboBonus = Math.floor(comboBonus / 5) * 5;
-	let maxSpeedSq = this.defaultMaxSpeedSq + comboBonus * 20 * this.fp * this.fp;
-	if (currSpeed >= maxSpeedSq) {
-		let scaleRatio = Math.sqrt(maxSpeedSq / currSpeed);
-		this.velX *= scaleRatio;
-		this.velY *= scaleRatio;
-	}
 
 	// limit the falling speed when nature falling
 	if (this.status == 0) {
@@ -168,9 +190,23 @@ MainBall.prototype.update = function() {
 
 }
 
+MainBall.prototype.inputDown = function() {
+	if (this.status == 3) {
+		this.status = 0;
+	} else {
+		this.charge();
+	}
+}
+
 MainBall.prototype.charge = function() {
 	// charging
 	this.status = 1;
+}
+
+MainBall.prototype.inputUp = function() {
+	if (this.status == 1) {
+		this.fire();
+	}
 }
 
 MainBall.prototype.fire = function() {
@@ -178,10 +214,11 @@ MainBall.prototype.fire = function() {
 	if (this.status != 1) { return; }
 
 	// check if charge long enough
-	if (this.chargeCounter < this.defaultChargeTimer) {
-		this.status = 0;
-		return;
-	}
+	// disable for now.
+	// if (this.chargeCounter < this.defaultChargeTimer) {
+	// 	this.status = 0;
+	// 	return;
+	// }
 
 	this.currentFiringTimer = 0;
 	let targetPivot;
@@ -228,7 +265,7 @@ MainBall.prototype.drawToContext = function(theContext) {
 	theContext.stroke();
 
 	// charging
-	if (this.status == 1 && this.chargeCounter >= this.defaultChargeTimer) {
+	if (this.status == 1) {
 		// Draws the charging circle
 		theContext.fillStyle = "#00000066";
 		theContext.beginPath();
@@ -274,6 +311,29 @@ MainBall.prototype.drawToContext = function(theContext) {
     	theContext.lineTo(this.hookedPivot.x, this.hookedPivot.y);
 		theContext.lineWidth = (2 + ropeLevel) * this.fp;
 		theContext.stroke();
+	}
+
+	// Limit breaker
+	let limitBreakerWidth = 0;
+	if (this.limitBreakerCounter < this.defaultLimitBreaker / 2) {
+		limitBreakerWidth = 6 * this.fp;
+		theContext.fillStyle = "rgba(0, 200, 0, 0.5)";
+	} else if (this.limitBreakerCounter < this.defaultLimitBreaker *4 / 5) {
+		limitBreakerWidth = 8 * this.fp;
+		theContext.fillStyle = "rgba(0, 0, 200, 0.5)";
+	} else if (this.limitBreakerCounter < this.defaultLimitBreaker) {
+		limitBreakerWidth = 10 * this.fp;
+		theContext.fillStyle = "rgba(200, 0, 0, 0.5)";
+	} else if (this.limitBreakerCounter == this.defaultLimitBreaker) {
+		limitBreakerWidth = 10 * this.fp;
+		theContext.fillStyle = "rgba(255, 255, 0, 0.8)";
+	}
+	theContext.fillRect(0, this.canvasHeight * (1 - (this.limitBreakerCounter / this.defaultLimitBreaker)), limitBreakerWidth, this.canvasHeight);
+	theContext.fillRect(this.canvasWidth - limitBreakerWidth, this.canvasHeight * (1 - (this.limitBreakerCounter / this.defaultLimitBreaker)), limitBreakerWidth, this.canvasHeight);
+
+	if (this.limitBreakerCounter == this.defaultLimitBreaker) {
+		theContext.fillRect(0, 0, this.canvasWidth, limitBreakerWidth);
+		theContext.fillRect(0, this.canvasHeight - limitBreakerWidth, this.canvasWidth, this.canvasHeight);
 	}
 }
 

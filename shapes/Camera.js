@@ -14,33 +14,63 @@ function Camera(fp, globalSpeed, canvasWidth, canvasHeight, mainBall, pivots, cu
 	this.score = 0;
 
 	this.currentCombatStatus = currentCombatStatus;
+
+	this.isLimitBreaking = false;
 }
 
 
 Camera.prototype.update = function() {
-	// if (this.mainBall.y <= this.canvasHeight / 5) {
-	// 	this.camMove(this.canvasHeight/5 - this.mainBall.y);
-	// } else 
-	if (this.mainBall.y <= this.canvasHeight / 3 ) {
+	// Is Limit Breaking
+	if (this.mainBall.hookedPivot != undefined && this.mainBall.hookedPivot.limitBreakCounter > 0) {
+		let dy = (this.canvasHeight*2/5 - this.mainBall.hookedPivot.y)/5;
+		this.camMove(dy);
+		this.score += dy;
+		this.isLimitBreaking = true;
+		return;
+	}
+
+	// After limit breaking
+	if (this.isLimitBreaking) {
+		if(this.mainBall.y >= this.canvasHeight*17/20) {
+			this.camMove(2*this.fp);
+			return;
+		} else {
+			this.isLimitBreaking = false;
+			// reset baseLine without changing score.
+			this.baseLine = this.hellOffset;
+		}
+	}
+
+
+	// Go up
+	if (this.mainBall.y <= this.canvasHeight * 2 / 20) {
+		this.camMove(Math.max(10* this.fp, this.canvasHeight * 2/20 - this.mainBall.y));
+	} else if (this.mainBall.y <= this.canvasHeight *7/ 20 ) {
 		this.camMove(10 * this.fp);
-	} else if (this.mainBall.y <= this.canvasHeight / 2 ) {
+	} else if (this.mainBall.y <= this.canvasHeight *11 / 20 ) {
 		this.camMove(6 * this.fp);
-	} else if (this.mainBall.y <= this.canvasHeight * 12 / 20 ) {
+	} else if (this.mainBall.y <= this.canvasHeight * 14 / 20 ) {
 		// this.camMove(Math.min(this.canvasHeight * 12 / 20 - this.mainBall.y, 5 * this.fp));
 		this.camMove(4 * this.fp);
-	} else if (this.mainBall.y <= this.canvasHeight * 14 / 20 ) {
-		this.camMove(Math.min(this.canvasHeight * 14 / 20 - this.mainBall.y, 2 * this.fp));
+	} else if (this.mainBall.y <= this.canvasHeight * 15 / 20 ) {
+		this.camMove(Math.min(this.canvasHeight * 15 / 20 - this.mainBall.y, 2 * this.fp));
 	} else if(this.mainBall.y >= this.canvasHeight*17/20) {
+		// Go Down
 		this.camMove(this.canvasHeight*17/20 - this.mainBall.y);	
-	} else if (this.mainBall.y >= this.canvasHeight*14/20) {
-		this.camMove(Math.max(this.canvasHeight*14/20 - this.mainBall.y, -2 * this.fp));	
+	} else if (this.mainBall.y >= this.canvasHeight*15/20) {
+		this.camMove(Math.max(this.canvasHeight*15/20 - this.mainBall.y, -2 * this.fp));	
 	}
+
 	if (this.baseLine <= -35 * this.fp) {
 		this.increaseBaseLine(3, 1);
-	} else if (this.baseLine <= 45 * this.fp){
+	} else 
+	if (this.baseLine <= 45 * this.fp){
 		this.increaseBaseLine(4/5, (this.globalSpeed["ratio"] + 2)/3);
 	} else {
 		this.increaseBaseLine(2/5, (this.globalSpeed["ratio"] + 1)/2);
+	}
+	if (this.baseLine < this.hellOffset) {
+		this.increaseBaseLine(this.hellOffset - this.baseLine, 1);
 	}
 }
 
@@ -55,10 +85,6 @@ Camera.prototype.camMove = function(dy) {
 	}
 	this.mainBall.y += dy;
 	this.baseLine -= dy;
-	if (this.baseLine < this.hellOffset) {
-		this.increaseBaseLine(this.hellOffset - this.baseLine, 1);
-	}
-	this.baseLine = this.baseLine <= this.hellOffset? this.hellOffset : this.baseLine;
 }
 
 //A function for drawing the particle.
@@ -86,7 +112,7 @@ Camera.prototype.increaseBaseLine = function(dy, speedRatio) {
 }
 
 Camera.prototype.getScore = function() {
-	return Math.floor(this.score/100);
+	return Math.floor(this.score/200);
 }
 
 Camera.prototype.getCombo = function() {
