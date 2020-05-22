@@ -104,13 +104,13 @@ MainBall.prototype.update = function() {
 			this.status = 3;
 			this.currentFiringTimer = 0;
 			// Check if LB is full first
-			if (this.limitBreakerCounter == this.defaultLimitBreaker) {
-				this.limitBreakerCounter = 0;
+			if (this.limitBreakerCounter >= this.defaultLimitBreaker) {
+				this.limitBreakerCounter -= this.defaultLimitBreaker;
 				let comboBonus = Math.floor((this.comboCount-1 > 20 ? 20: this.comboCount-1)/5);
 				this.hookedPivot.setLimitBreakCounter(1000 + 200 * comboBonus);
 			} else {
 				// if not, charge LB
-				let addLB = 2 + (this.comboCount > 10? 10 : this.comboCount);
+				let addLB = 3 + (this.comboCount > 10? 10 : this.comboCount);
 				this.limitBreakerCounter += addLB;
 				this.limitBreakerCounter = Math.min(this.limitBreakerCounter, this.defaultLimitBreaker);
 			}
@@ -191,6 +191,7 @@ MainBall.prototype.update = function() {
 }
 
 MainBall.prototype.inputDown = function() {
+	// The behavior is 1st click for release rope and 2nd for aiming again.
 	if (this.status == 3) {
 		this.status = 0;
 	} else {
