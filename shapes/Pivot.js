@@ -95,7 +95,7 @@ Pivot.prototype.drawToContext = function(theContext) {
 		let rawProgress = 1 - this.limitBreakCounter / this.originLimitBreakCounter;
 		let progress = 	Math.min(1, rawProgress * 1.1);
 
-		let limitBreakerWidth = 10 + progress * 2 * this.fp;
+		let limitBreakerWidth = (10 + progress * 2) * this.fp;
 		theContext.fillStyle = "rgba(255, " + (1-progress)*125+ ", 0, 0.3)";
 		let margin = (1.15*this.radius);
 
@@ -112,7 +112,7 @@ Pivot.prototype.drawToContext = function(theContext) {
 
 
 		let earlyProgress = Math.min(1, progress * 5);
-		let earlyLimitBreakerWidth = 10 - earlyProgress * 6 * this.fp;
+		let earlyLimitBreakerWidth = (10 - earlyProgress * 6) * this.fp;
 		theContext.fillStyle = "rgba(255, " + (1-earlyProgress)*125+ ", 0, 0.8)";
 		let earlyMargin = (1.15 * this.radius)/earlyProgress;
 		// left
