@@ -1,7 +1,7 @@
 function Game(){}
 
 Game.prototype.init = function(fp, canvasWidth, canvasHeight, imageManager, soundManager){
-	console.log("version: 1.09") // clean David test
+	console.log("version: 1.10") // clean David test
 	// flexible pixel.
 	this.fp = fp;
 	this.canvasWidth = canvasWidth;

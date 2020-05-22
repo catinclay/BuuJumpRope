@@ -109,6 +109,7 @@ Camera.prototype.drawToContext = function(theContext) {
 Camera.prototype.increaseBaseLine = function(dy, speedRatio) {
 	this.score += dy * speedRatio;
 	this.baseLine += dy * this.fp * speedRatio;
+	this.mainBall.setScore(this.score);
 }
 
 Camera.prototype.getScore = function() {

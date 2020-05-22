@@ -46,9 +46,9 @@ Pivot.prototype.setLimitBreakCounter = function(limitBreak) {
 	this.isShowingLimitBreak = true;
 }
 
-Pivot.prototype.triggerLimitBreak = function(comboBonus) {
+Pivot.prototype.triggerLimitBreak = function(speedBonus) {
 	let dis = (this.originLimitBreakCounter*12/20 - Math.abs(this.limitBreakCounter - this.originLimitBreakCounter/2))/35;
-	dis += comboBonus * (this.originLimitBreakCounter*1/40) / 35;
+	dis += speedBonus * (this.originLimitBreakCounter*1/40) / 35;
 	if (this.limitBreakCounter > 0) {
 		this.limitBreakCounter-= dis;
 		this.y -= dis * this.fp;
