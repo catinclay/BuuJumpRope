@@ -1,9 +1,10 @@
 // Simple class example
 
-function MainBall(fp, globalSpeed, canvasWidth, canvasHeight, posX, posY, pivots) {
+function MainBall(fp, globalSpeed, canvasWidth, canvasHeight, soundManager, posX, posY, pivots) {
 	this.fp = fp
 	this.canvasWidth = canvasWidth;
 	this.canvasHeight = canvasHeight;
+	this.soundManager = soundManager;
 	this.x = posX * fp;
 	this.y = posY * fp;
 	this.velX = 0;
@@ -93,13 +94,25 @@ MainBall.prototype.update = function() {
 		}
 	} else if (this.status == 2) {
 		// firing
+		// only do addLB or trigger LB in one time.
 
 		// First enter this status
 		if(this.currentFiringTimer == 0) {
 			// show a "delay" when first enter this status
 			this.velX /= 2;
 			this.velY /= 3;
-			
+			// play sfx for firing
+			this.soundManager.play("whip-sound");
+						
+			if (this.limitBreakerCounter >= this.defaultLimitBreaker) {
+				this.limitBreakerCounter -= this.defaultLimitBreaker;
+								let comboBonus = Math.floor((this.comboCount > 20 ? 20: this.comboCount)/5);
+				this.hookedPivot.setLimitBreakCounter(1200 + 200 * comboBonus);
+			} else {
+				let mockCombo = this.comboCount > 7? 7 : this.comboCount;
+				let addLB = 2 + (mockCombo * mockCombo * Math.sqrt(mockCombo))/10 + Math.max(0, this.comboCount - 7)/4;
+				this.limitBreakerCounter += addLB;
+			}
 		}
 
 		this.chargingDistance = this.defaultChargingDistance;
@@ -109,18 +122,7 @@ MainBall.prototype.update = function() {
 		if (this.currentFiringTimer >= this.defaultFiringTimer) {
 			this.status = 3;
 			this.currentFiringTimer = 0;
-			// Check if LB is full first
-			if (this.limitBreakerCounter >= this.defaultLimitBreaker) {
-				this.limitBreakerCounter -= this.defaultLimitBreaker;
-				let comboBonus = Math.floor((this.comboCount > 20 ? 20: this.comboCount)/5);
-				this.hookedPivot.setLimitBreakCounter(1200 + 200 * comboBonus);
-			} else {
-				// if not, charge LB
-				let mockCombo = this.comboCount > 7? 7 : this.comboCount;
-				let addLB = 2 + (mockCombo * mockCombo * Math.sqrt(mockCombo))/10 + Math.max(0, this.comboCount - 7)/4;
-				this.limitBreakerCounter += addLB;
-				console.log(addLB);
-			}
+
 		}
 
 	} else if (this.status == 3) {
@@ -205,7 +207,7 @@ MainBall.prototype.inputDown = function() {
 	// } else {
 	// 	this.charge();
 	// }
-	if (!(this.status == 3 && this.hookedPivot.limitBreakCounter > this.hookedPivot.originLimitBreakCounter/2)) 
+	if (!((this.status == 3 || this.status == 2) && this.hookedPivot.limitBreakCounter > this.hookedPivot.originLimitBreakCounter/2)) 
 	this.charge();
 }
 
