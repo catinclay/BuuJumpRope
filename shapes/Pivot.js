@@ -25,13 +25,32 @@ function Pivot(fp, globalSpeed, canvasWidth, canvasHeight, posX, posY, radius, p
 	this.isHooked = false;
 
 	this.isUsed = false;
+	this.isUsedTimer = -100;
 
 	this.destroySoon = false;
 
 	this.originLimitBreakCounter = 0;
 	this.limitBreakCounter = 0;
 
+	this.isSuperPivot = false;
+
 	this.isShowingLimitBreak = false;
+}
+
+Pivot.prototype.setUsed = function(isBossBattle) {
+	this.isUsed = true;
+	this.isUsedTimer = isBossBattle? 720 : -100;
+}
+
+Pivot.prototype.update = function() {
+	if (this.isUsed && this.isUsedTimer != -100) {
+		this.isUsedTimer-= this.globalSpeed["ratio"];
+		if(this.isUsedTimer <= 0) {
+			this.isUsed = false;
+		}
+	}
+	this.velY += this.accelY;
+	this.y += this.velY;
 }
 
 Pivot.prototype.setHooked = function(isHooked) {
@@ -41,8 +60,8 @@ Pivot.prototype.setHooked = function(isHooked) {
 }
 
 Pivot.prototype.setLimitBreakCounter = function(limitBreak) {
-	this.originLimitBreakCounter = limitBreak;
-	this.limitBreakCounter = limitBreak;
+	this.originLimitBreakCounter += limitBreak;
+	this.limitBreakCounter += limitBreak;
 	this.isShowingLimitBreak = true;
 }
 

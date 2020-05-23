@@ -1,6 +1,6 @@
 // Simple class example
 
-function MainBall(fp, globalSpeed, canvasWidth, canvasHeight, soundManager, posX, posY, pivots) {
+function MainBall(fp, globalSpeed, canvasWidth, canvasHeight, soundManager, posX, posY, pivots, bossHolder) {
 	this.fp = fp
 	this.canvasWidth = canvasWidth;
 	this.canvasHeight = canvasHeight;
@@ -19,6 +19,8 @@ function MainBall(fp, globalSpeed, canvasWidth, canvasHeight, soundManager, posX
 	// Pivots
 	this.pivots = pivots;
 
+	// boss
+	this.bossHolder = bossHolder;
 
 	// Momentum
 	// status:
@@ -56,11 +58,108 @@ function MainBall(fp, globalSpeed, canvasWidth, canvasHeight, soundManager, posX
 	this.defaultLimitBreaker = 100;
 	this.limitBreakerCounter = 0;
 
+	// score
 	this.score = 0;
+	this.comboScore = 0;
+
+	// Boss
+	this.bossBattle = false;
+	this.bossBattleReady = false;
+	this.bossBattleGroundOffset = canvasHeight - 50 * this.fp;
+	this.currentBossBattleGround = canvasHeight + 100 * this.fp;
+	this.waitForBossDie = false;
+
+	// Attack and damage
+	this.attack = 15;
+	this.maxHp = 3;
+	this.hp = this.maxHp;
+	this.invisibleTimer = 0;
+}
+
+MainBall.prototype.startBossBattle = function() {
+	this.status = 0;
+	this.bossBattle = true;
+	this.currentBossBattleGround = this.canvasHeight + 100 * this.fp;
+}
+
+MainBall.prototype.endBossBattle = function() {
+	this.hp = this.maxHp;
+	this.bossHolder[0].isDead = true;
+	this.bossBattle = false;
+	this.bossBattleReady = false;
+	this.waitForBossDie = false;
+}
+
+MainBall.prototype.isWaitBossDieDone = function() {
+	return this.waitForBossDie && this.y == this.currentBossBattleGround;
+}
+
+MainBall.prototype.bossBattleUpdate = function() {
+	if (this.waitForBossDie) {
+		if (this.y > this.currentBossBattleGround) {
+			this.y = this.currentBossBattleGround;
+			this.velY = 0;
+		}
+	}
+
+	if (!this.bossBattleReady) {
+		if (this.currentBossBattleGround >= this.bossBattleGroundOffset) {
+			this.currentBossBattleGround -= 1 * this.fp;
+		}
+		if (this.y > this.currentBossBattleGround) {
+			this.y = this.currentBossBattleGround;
+		}
+		if (this.currentBossBattleGround <= this.bossBattleGroundOffset && this.y == this.currentBossBattleGround) {
+			this.bossBattleReady = true;
+			this.velY = 0;
+		}
+		return;
+	}
+
+	// Bounce Y
+	if (this.y > this.currentBossBattleGround) {
+		if (this.velY > 0) { this.velY *= -0.5; }
+		this.y -= 2 * (this.y - this.currentBossBattleGround);
+	}
+
+	if (this.bossHolder.length > 0) {
+		let boss = this.bossHolder[0];
+
+		if (boss.hp > 0) { 
+			// Check attackWave
+			if (this.invisibleTimer <= 0) {
+				for (var i = boss.attackWaves.length - 1; i >= 0; i--) {
+					if(boss.attackWaves[i].hasDamage(this.y)) {
+						this.damaged();
+						this.hp--;
+					}
+				}
+			}
+
+			// Hit boss
+			if (this.y <= this.bossHolder[0].y) {
+				if (this.velY < 0) { this.velY *= -1; }
+				this.y -= 2 * (this.y - boss.y);
+				boss.damage(this.attack);
+				this.status = 0;
+			}
+		}
+	}
+}
+
+MainBall.prototype.damaged = function() {
+	this.invisibleTimer = 180;
+	this.status = 0;
+	this.velX /= 3;
+	this.velY = -4 * this.fp;
 }
 
 MainBall.prototype.setScore = function(score) {
 	this.score = score;
+}
+
+MainBall.prototype.getComboScore = function() {
+	return Math.floor(this.comboScore);
 }
 
 MainBall.prototype.update = function() {
@@ -96,18 +195,22 @@ MainBall.prototype.update = function() {
 		// firing
 		// only do addLB or trigger LB in one time.
 
-		// First enter this status
+		// First time enter this status
 		if(this.currentFiringTimer == 0) {
 			// show a "delay" when first enter this status
 			this.velX /= 2;
 			this.velY /= 3;
 			// play sfx for firing
 			this.soundManager.play("whip-sound");
-						
+			if (this.hookedPivot.isSuperPivot) {
+				this.endBossBattle();
+			}
 			if (this.limitBreakerCounter >= this.defaultLimitBreaker) {
-				this.limitBreakerCounter -= this.defaultLimitBreaker;
-								let comboBonus = Math.floor((this.comboCount > 20 ? 20: this.comboCount)/5);
-				this.hookedPivot.setLimitBreakCounter(1200 + 200 * comboBonus);
+				if (!this.bossBattle) {
+					this.limitBreakerCounter -= this.defaultLimitBreaker;
+					let comboBonus = Math.floor((this.comboCount > 20 ? 20: this.comboCount)/5);
+					this.hookedPivot.setLimitBreakCounter(1200 + 200 * comboBonus);
+				}
 			} else {
 				let mockCombo = this.comboCount > 7? 7 : this.comboCount;
 				let addLB = 2 + (mockCombo * mockCombo * Math.sqrt(mockCombo))/10 + Math.max(0, this.comboCount - 7)/4;
@@ -148,7 +251,11 @@ MainBall.prototype.update = function() {
 		let currSpeed = this.velX * this.velX + this.velY * this.velY;
 		let comboBonus = Math.floor((this.comboCount > 20 ? 20: this.comboCount)/5);
 		let scoreBonus = Math.floor(this.score);
-		let maxSpeedSq = this.defaultMaxSpeedSq + comboBonus * 80 * this.fp * this.fp + scoreBonus * this.fp * this.fp;
+		let maxSpeedSq = this.bossBattle? 
+			// boss battle
+			this.defaultMaxSpeedSq + 150 * this.fp * this.fp : 
+			// climbing
+			this.defaultMaxSpeedSq + comboBonus * 80 * this.fp * this.fp + scoreBonus * this.fp * this.fp;
 		if (currSpeed >= maxSpeedSq) {
 			let scaleRatio = Math.sqrt(maxSpeedSq / currSpeed);
 			this.velX *= scaleRatio;
@@ -197,7 +304,17 @@ MainBall.prototype.update = function() {
 		this.x = 2 * this.canvasWidth - this.x;
 		this.velX *= -1;
 	}
+	if (this.invisibleTimer > 0) {
+		this.invisibleTimer -= this.globalSpeed["ratio"];
+		if(this.invisibleTimer < 0) {
+			this.invisibleTimer = 0;
+		}
+	}
 
+	// bossBattle
+	if (this.bossBattle) {
+		this.bossBattleUpdate();
+	}
 }
 
 MainBall.prototype.inputDown = function() {
@@ -248,12 +365,17 @@ MainBall.prototype.fire = function() {
 		return;
 	} else {
 		this.comboCount++;
+		this.comboScore += this.comboCount/10;
 		// has target, firing
 		this.status = 2;
 		targetPivot.setHooked(true);
-		targetPivot.isUsed = true;
+		targetPivot.setUsed(this.bossBattleReady);
 		this.hookedPivot = targetPivot;
 	}
+}
+
+MainBall.prototype.isHookingSuperPivot = function() {
+	return this.hookedPivot != undefined && this.hookedPivot.isSuperPivot;
 }
 
 MainBall.prototype.getCombo = function(){
@@ -268,13 +390,15 @@ MainBall.prototype.disFP = function(p) {
 //A function for drawing the particle.
 MainBall.prototype.drawToContext = function(theContext) {
 	// Draws the MainBall
-	theContext.beginPath();
-	theContext.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
-	theContext.fillStyle = this.color;
-	theContext.fill();
-	theContext.strokeStyle = this.mainBallStrokeStyle;
-	theContext.lineWidth = 2 * this.fp;
-	theContext.stroke();
+	if (Math.floor(this.invisibleTimer / 10) % 2 == 0) {
+		theContext.beginPath();
+		theContext.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
+		theContext.fillStyle = this.color;
+		theContext.fill();
+		theContext.strokeStyle = this.mainBallStrokeStyle;
+		theContext.lineWidth = 2 * this.fp;
+		theContext.stroke();
+	}
 
 	// charging
 	if (this.status == 1 && this.chargeCounter >= this.defaultChargeTimer) {
@@ -348,6 +472,28 @@ MainBall.prototype.drawToContext = function(theContext) {
 	if (dummyLimitBreakerCounter >= this.defaultLimitBreaker) {
 		theContext.fillRect(0, 0, this.canvasWidth, limitBreakerWidth);
 		theContext.fillRect(0, this.canvasHeight - limitBreakerWidth, this.canvasWidth, this.canvasHeight);
+	}
+
+	// BossGround 
+	if (this.bossBattle || this.isHookingSuperPivot()) {
+		theContext.strokeStyle = "#000000";
+		theContext.beginPath()
+		theContext.moveTo(0, this.currentBossBattleGround + this.radius);
+		theContext.lineTo(this.canvasWidth, this.currentBossBattleGround + this.radius);
+		theContext.lineWidth = 2 * this.fp;
+		theContext.stroke();
+	}
+
+	// Hp
+	if (this.bossBattleReady || this.isHookingSuperPivot()) {
+		let hpY = this.y - this.radius - 10 * this.fp;
+		let hph = 6 * this.fp;
+		let hpX = this.x - 10 * this.fp;
+		let hpw = 6 * this.fp; 
+		theContext.fillStyle = "#FF0000";
+		for (var i = 0; i < this.hp; ++i) {
+			theContext.fillRect(hpX + i * 7 * this.fp, hpY, hpw, hph);
+		}
 	}
 }
 

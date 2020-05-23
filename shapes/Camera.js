@@ -16,13 +16,38 @@ function Camera(fp, globalSpeed, canvasWidth, canvasHeight, mainBall, pivots, cu
 	this.currentCombatStatus = currentCombatStatus;
 
 	this.isLimitBreaking = false;
+	this.bossBattle = false;
 }
 
+Camera.prototype.startBossBattle = function() {
+	this.bossBattle = true;
+}
+
+Camera.prototype.bossBattleUpdate = function() {
+	// set baseline to hellOffline
+	if (this.baseLine >= this.hellOffset) {
+		this.baseLine-= 2.5* this.fp;
+	}
+	if (this.mainBall.bossBattleReady) {
+		this.trackMainBallBossBattle();
+	}
+	if (this.mainBall.isHookingSuperPivot()) {
+		this.bossBattle = false;
+	}
+}
 
 Camera.prototype.update = function() {
+	if (!this.bossBattle) {
+		this.climbUpdate();
+	} else {
+		this.bossBattleUpdate();
+	}
+}
+
+Camera.prototype.climbUpdate = function() {
 	// Is Limit Breaking
 	if (this.mainBall.hookedPivot != undefined && this.mainBall.hookedPivot.limitBreakCounter > 0) {
-		let dy = (this.canvasHeight*2/5 - this.mainBall.hookedPivot.y)/5;
+		let dy = (this.canvasHeight*3/10 - this.mainBall.hookedPivot.y)/5;
 		this.camMove(dy);
 		this.rawScore += dy;
 		this.isLimitBreaking = true;
@@ -42,6 +67,22 @@ Camera.prototype.update = function() {
 		}
 	}
 
+	this.trackMainBall();
+
+	this.updateBaseLine();
+}
+
+Camera.prototype.trackMainBallBossBattle = function() {
+	// check down first
+	if(this.mainBall.y >= this.canvasHeight*65/70) {
+		// Go Down
+		this.camMove(this.canvasHeight*65/70 - this.mainBall.y);	
+	}
+
+	if (this.mainBall.bossHolder.length != 0) {
+		let boss = this.mainBall.bossHolder[0];
+		if (boss.y >= 150 * this.fp) return;
+	}
 
 	// Go up
 	if (this.mainBall.y <= this.canvasHeight * 2 / 20) {
@@ -55,13 +96,33 @@ Camera.prototype.update = function() {
 		this.camMove(4 * this.fp);
 	} else if (this.mainBall.y <= this.canvasHeight * 15 / 20 ) {
 		this.camMove(Math.min(this.canvasHeight * 15 / 20 - this.mainBall.y, 2 * this.fp));
-	} else if(this.mainBall.y >= this.canvasHeight*17/20) {
-		// Go Down
-		this.camMove(this.canvasHeight*17/20 - this.mainBall.y);	
-	} else if (this.mainBall.y >= this.canvasHeight*15/20) {
-		this.camMove(Math.max(this.canvasHeight*15/20 - this.mainBall.y, -2 * this.fp));	
 	}
+}
 
+Camera.prototype.trackMainBall = function() {
+	// Go up
+	if (this.mainBall.y <= this.canvasHeight * 2 / 20) {
+		this.camMove(Math.max(10* this.fp, this.canvasHeight * 2/20 - this.mainBall.y));
+	} else if (this.mainBall.y <= this.canvasHeight *7/ 20 ) {
+		this.camMove(10 * this.fp);
+	} else if (this.mainBall.y <= this.canvasHeight *11 / 20 ) {
+		this.camMove(6 * this.fp);
+	} else if (this.mainBall.y <= this.canvasHeight * 14 / 20 ) {
+		// this.camMove(Math.min(this.canvasHeight * 12 / 20 - this.mainBall.y, 5 * this.fp));
+		this.camMove(4 * this.fp);
+	} else if (this.mainBall.y <= this.canvasHeight * 15 / 20 ) {
+		this.camMove(Math.min(this.canvasHeight * 15 / 20 - this.mainBall.y, 2 * this.fp));
+	} else {
+		if(this.mainBall.y >= this.canvasHeight*17/20) {
+			// Go Down
+			this.camMove(this.canvasHeight*17/20 - this.mainBall.y);	
+		} else if (this.mainBall.y >= this.canvasHeight*15/20) {
+			this.camMove(Math.max(this.canvasHeight*15/20 - this.mainBall.y, -2 * this.fp));	
+		}
+	}
+}
+
+Camera.prototype.updateBaseLine = function() {
 	if (this.baseLine <= -35 * this.fp) {
 		this.increaseBaseLine(3, 1);
 	} else 
@@ -78,13 +139,21 @@ Camera.prototype.update = function() {
 Camera.prototype.camMove = function(dy) {
 	for (var i = this.pivots.length - 1; i >= 0; i--) {
 		this.pivots[i].y += dy;
-		if (this.pivots[i].y > this.getDeadLine()) {
-			this.pivots[i].isUsed = true;
-		} else if (this.pivots[i].y > this.canvasHeight - this.hellOffset) {
-			this.pivots[i].destroySoon = true;
+		if (!this.bossBattle) {
+			if (this.pivots[i].y > this.getDeadLine()) {
+				this.pivots[i].isUsed = true;
+			} else if (this.pivots[i].y > this.canvasHeight - this.hellOffset) {
+				this.pivots[i].destroySoon = true;
+			}
 		}
 	}
 	this.mainBall.y += dy;
+	if (this.mainBall.bossBattleReady || this.mainBall.isHookingSuperPivot()) {
+		this.mainBall.currentBossBattleGround += dy;
+		for (var i = this.mainBall.bossHolder.length - 1; i >= 0; i--) {
+			this.mainBall.bossHolder[i].camMove(dy);
+		}
+	}
 	this.baseLine -= dy;
 }
 
@@ -115,6 +184,10 @@ Camera.prototype.increaseBaseLine = function(dy, speedRatio) {
 
 Camera.prototype.getScore = function() {
 	return Math.floor(this.rawScore/200);
+}
+
+Camera.prototype.getVisibleScore = function() {
+	return this.getScore() + this.mainBall.getComboScore();
 }
 
 Camera.prototype.getCombo = function() {
