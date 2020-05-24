@@ -154,10 +154,12 @@ DungeonMaster.prototype.prepareBossPivot = function() {
 }
 
 DungeonMaster.prototype.fadeOutBgm = function() {
-	if (this.bgmHolder.volume >= this.bgmFadeOutRatio) {
-		this.bgmHolder.volume -= this.bgmFadeOutRatio;
-	} else {
-		this.bgmHolder.volume = 0;
+	if (this.bgmHolder != undefined) {
+		if (this.bgmHolder.volume >= this.bgmFadeOutRatio) {
+			this.bgmHolder.volume -= this.bgmFadeOutRatio;
+		} else {
+			this.bgmHolder.volume = 0;
+		}
 	}
 }
 
