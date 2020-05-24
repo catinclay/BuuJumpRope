@@ -150,6 +150,7 @@ MainBall.prototype.bossBattleUpdate = function() {
 
 MainBall.prototype.damaged = function() {
 	this.comboCount = 0;
+	this.isStanding = false;
 	if (this.invisibleTimer <= 0) {
 		this.hp--;		
 		this.invisibleTimer = this.invisibleDuration;
