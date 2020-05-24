@@ -48,10 +48,34 @@ AttackWave.prototype.drawToContext = function(theContext) {
 		let a = (Math.abs(this.forecastCounter - this.defaultForecastCounter/2))/this.defaultForecastCounter/3;
 		theContext.fillStyle = "rgba(255, 0, 0, " + a + ")";
 		theContext.fillRect(this.x - this.width/2, this.y, this.width, this.height);
+		if (this.y >= 650 *this.fp) {
+			theContext.fillStyle = "rgba(255, 0, 0, " + a + ")";
+			let gap = 125 * this.fp;
+			theContext.beginPath();
+			for (var i = 0; i < 3; ++i) {
+				theContext.moveTo(25 * this.fp + i * gap , 650 * this.fp);
+				theContext.lineTo(125 * this.fp + i * gap , 650 * this.fp);
+				theContext.lineTo(75 * this.fp + i * gap , 675 * this.fp);
+				theContext.closePath();
+			}
+			theContext.fill();
+		} else if (this.y <= 100 * this.fp - this.height){
+			theContext.fillStyle = "rgba(255, 0, 0, " + a + ")";
+			let gap = 125 * this.fp;
+			theContext.beginPath();
+			for (var i = 0; i < 3; ++i) {
+				theContext.moveTo(25 * this.fp + i * gap , 100 * this.fp);
+				theContext.lineTo(125 * this.fp + i * gap , 100 * this.fp);
+				theContext.lineTo(75 * this.fp + i * gap , 75 * this.fp);
+				theContext.closePath();
+			}
+			theContext.fill();
+		}
 	} else {
 		if (this.onGoingAttackTimer <= this.defaultForecastCounter * 7 / 8) {
 			theContext.fillStyle = "rgba(255, 0, 0, " + (0.2 + 0.3 * this.onGoingAttackTimer/this.defaultForecastCounter) + ")";
 			theContext.fillRect(this.x - this.width/2, this.y, this.width, this.height);
+
 		} else {
 			let attackAnimationProgress = Math.min(this.defaultForecastCounter/4, this.onGoingAttackTimer - this.defaultForecastCounter* 7 / 8) / (this.defaultForecastCounter/4);
 			let spikeWidth = 10 * this.fp;
@@ -71,21 +95,6 @@ AttackWave.prototype.drawToContext = function(theContext) {
 				}
 			}
 			theContext.fill();
-
-			// let arrowEdge = 5 * this.fp;
-			// let xDis = 480 * this.fp * ((this.onGoingAttackTimer - this.defaultForecastCounter)/this.defaultForecastCounter);
-			// let yMargin = 5 * this.fp;
-			// let yGap = 30 * this.fp;
-			// theContext.strokeStyle = "#000000";
-			// theContext.lineWidth = 2 * this.fp;
-			// for (var i = 0; i < 5; ++i) {
-			// 	   theContext.moveTo(xDis, this.y + yMargin + yGap * i);
-			//     theContext.lineTo(xDis-3*arrowEdge, this.y - arrowEdge + yMargin + yGap * i);
-			//     theContext.lineTo(xDis-3*arrowEdge, this.y + arrowEdge + yMargin + yGap * i);
-			//     theContext.lineTo(xDis, this.y + yMargin + yGap * i);
-			//     theContext.lineTo(xDis-80 * this.fp, this.y + yMargin + yGap * i);
-	  		// }
-			// theContext.stroke();
 		}
 	}
 }
