@@ -5,11 +5,6 @@ GameEngine.prototype.init = function(game, imageManager, soundManager, fps) {
 	this.theCanvas = document.getElementById("mainCanvas");
 	this.fp = 1;
 
-			this.fp = 2;
-		this.theCanvas.width *=2;
-		this.theCanvas.height *=2;
-		imageManager.isForMobile();
-
 	if(this.checkMobile()){
 		this.fp = 2;
 		this.theCanvas.width *=2;
