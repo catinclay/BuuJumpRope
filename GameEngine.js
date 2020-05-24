@@ -8,11 +8,13 @@ GameEngine.prototype.init = function(game, imageManager, soundManager, fps) {
 			this.fp = 2;
 		this.theCanvas.width *=2;
 		this.theCanvas.height *=2;
-	
+		imageManager.isForMobile();
+
 	if(this.checkMobile()){
 		this.fp = 2;
 		this.theCanvas.width *=2;
 		this.theCanvas.height *=2;
+		imageManager.isForMobile();
 	}
 	this.context = this.theCanvas.getContext("2d");
 	this.theCanvas.style.display = "block";

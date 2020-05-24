@@ -49,7 +49,6 @@ function MainBall(fp, globalSpeed, canvasWidth, canvasHeight, soundManager, posX
 	this.hookedPivot;
 
 	// Pulling
-	this.pullingPower = 2;
 
 	// Combo
 	this.comboCount = 0;
@@ -70,9 +69,10 @@ function MainBall(fp, globalSpeed, canvasWidth, canvasHeight, soundManager, posX
 	this.waitForBossDie = false;
 
 	// Attack and damage
-	this.attack = 15;
+	this.attack = 14;
 	this.maxHp = 3;
 	this.hp = this.maxHp;
+	this.invisibleDuration = 180;
 	this.invisibleTimer = 0;
 }
 
@@ -137,9 +137,11 @@ MainBall.prototype.bossBattleUpdate = function() {
 			}
 
 			// Hit boss
-			if (this.y <= this.bossHolder[0].y) {
+			let knockBackDis = boss.isHit(this.x, this.y);
+			if (knockBackDis!=0) {
+				this.y += knockBackDis;
 				if (this.velY < 0) { this.velY *= -1; }
-				this.y -= 2 * (this.y - boss.y);
+				// this.y -= 2 * (this.y - boss.y);
 				boss.damage(this.attack);
 				this.status = 0;
 			}
@@ -148,10 +150,11 @@ MainBall.prototype.bossBattleUpdate = function() {
 }
 
 MainBall.prototype.damaged = function() {
-	this.invisibleTimer = 180;
+	this.soundManager.play("mainball-hit");
+	this.invisibleTimer = this.invisibleDuration;
 	this.status = 0;
 	this.velX /= 3;
-	this.velY = -4 * this.fp;
+	this.velY = -6 * this.fp;
 }
 
 MainBall.prototype.setScore = function(score) {
@@ -207,6 +210,7 @@ MainBall.prototype.update = function() {
 			}
 			if (this.limitBreakerCounter >= this.defaultLimitBreaker) {
 				if (!this.bossBattle) {
+					this.soundManager.play("lb-sfx");
 					this.limitBreakerCounter -= this.defaultLimitBreaker;
 					let comboBonus = Math.floor((this.comboCount > 20 ? 20: this.comboCount)/5);
 					this.hookedPivot.setLimitBreakCounter(1200 + 200 * comboBonus);
@@ -390,7 +394,7 @@ MainBall.prototype.disFP = function(p) {
 //A function for drawing the particle.
 MainBall.prototype.drawToContext = function(theContext) {
 	// Draws the MainBall
-	if (Math.floor(this.invisibleTimer / 10) % 2 == 0) {
+	if (this.invisibleTimer == 0 || Math.floor(this.invisibleTimer / 10) % 2 != 0) {
 		theContext.beginPath();
 		theContext.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
 		theContext.fillStyle = this.color;

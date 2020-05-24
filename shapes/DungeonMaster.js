@@ -1,6 +1,6 @@
 // Simple class example
 
-function DungeonMaster(fp, globalSpeed, canvasWidth, canvasHeight, camera, scoreBoard, pivots, mainBall, bossHolder, attackWaves) {
+function DungeonMaster(fp, globalSpeed, canvasWidth, canvasHeight, imageManager, soundManager, camera, scoreBoard, pivots, mainBall, bossHolder, attackWaves) {
 	this.camera = camera;
 	this.scoreBoard = scoreBoard;
 	this.pivots = pivots;
@@ -8,9 +8,12 @@ function DungeonMaster(fp, globalSpeed, canvasWidth, canvasHeight, camera, score
 	this.globalSpeed = globalSpeed;
 	this.canvasWidth = canvasWidth;
 	this.canvasHeight = canvasHeight;
+	this.imageManager = imageManager;
+	this.soundManager = soundManager;
 	this.mainBall = mainBall;
 	this.bossHolder = bossHolder;
 	this.attackWaves = attackWaves;
+	this.bgmHolder;
 
 	this.pivots.push(this.getNewPivot(200, 200, 20));
 	this.pivots.push(this.getNewPivot(300, 300, 20));
@@ -26,6 +29,8 @@ function DungeonMaster(fp, globalSpeed, canvasWidth, canvasHeight, camera, score
 	this.bossOffset = -400;
 
 	this.bossDeadAnimationDelay = 180;
+
+	this.bgmFadeOutRatio = 1/3600;
 }
 
 //The function below returns a Boolean value representing whether the point with the coordinates supplied "hits" the particle.
@@ -52,6 +57,7 @@ DungeonMaster.prototype.update = function() {
 		if (this.mainBall.isWaitBossDieDone()) {
 			if (this.bossDeadAnimationDelay > 0) {
 				this.bossDeadAnimationDelay--;
+				this.fadeOutBgm();
 			} else if (this.bossDeadAnimationDelay == 0){
 				this.bossDeadAnimationDelay--;
 				this.prepareSuperPivot();
@@ -64,7 +70,8 @@ DungeonMaster.prototype.update = function() {
 				return;
 	    	} else {
 	    		this.prepareBossPivot();
-	    		this.bossHolder.push(new Boss(this.fp, this.globalSpeed, this.canvasWidth, this.canvasHeight, 200, this.bossOffset-150, this.attackWaves));
+	    		this.bossHolder.push(new Boss(this.fp, this.globalSpeed, this.soundManager, this.canvasWidth, this.canvasHeight, 
+	    			200, this.bossOffset-150, this.imageManager.get('bossImage'), this.attackWaves));
 	    	}
 	    }
 	}
@@ -83,7 +90,7 @@ DungeonMaster.prototype.update = function() {
 		if (boss.hp == 0) {
 			this.killedBoss++;
 			this.previousBossBattleMilestone = this.bossBattleMilestone;
-			this.bossBattleMilestone += 75 + 35 * this.killedBoss;
+			this.bossBattleMilestone += 75 + 45 * this.killedBoss;
 			this.bossDying();
 		}
 	}
@@ -102,6 +109,9 @@ DungeonMaster.prototype.bossDying = function() {
 }
 
 DungeonMaster.prototype.prepareSuperPivot = function() {
+	if (this.bgmHolder != undefined) {
+		this.bgmHolder.pause();
+	}
 	let superPivot = this.getNewPivot(200, 300, 20, "#FFFFFF");
 	superPivot.originLimitBreakCounter = 500;
 	superPivot.limitBreakCounter = 500;
@@ -110,6 +120,7 @@ DungeonMaster.prototype.prepareSuperPivot = function() {
 }
 
 DungeonMaster.prototype.prepareBossPivot = function() {
+	this.bgmHolder = this.soundManager.play("boss-battle-bgm");
 	let offset = this.bossOffset;
 
 	this.pivots.push(this.getNewPivot(75, 100 + offset, 8, "#888888"));
@@ -142,14 +153,29 @@ DungeonMaster.prototype.prepareBossPivot = function() {
 	this.bossBattleReady = true;
 }
 
+DungeonMaster.prototype.fadeOutBgm = function() {
+	if (this.bgmHolder.volume >= this.bgmFadeOutRatio) {
+		this.bgmHolder.volume -= this.bgmFadeOutRatio;
+	} else {
+		this.bgmHolder.volume = 0;
+	}
+}
+
+DungeonMaster.prototype.stopBGM = function() {
+	if (this.bgmHolder != undefined) {
+		this.bgmHolder.pause();
+	}
+}
+
 DungeonMaster.prototype.checkGameOver = function() {
 	if (!this.bossBattle) {
 		if (this.camera.getDeadLine() <= this.mainBall.y) {
+			this.mainBall.damaged();
 			this.mainBall.hp = 0;
 			return true;
 		}
-	} else {
-		return this.mainBall.hp <= 0;
+	} else if (this.mainBall.hp <= 0){
+		return true;
 	}
 	return false;
 	
@@ -176,7 +202,7 @@ DungeonMaster.prototype.checkGeneratePivot = function(){
 	//TODO clean up this
 	let highestPivotY = this.pivots[this.pivots.length-1].y/this.fp;
 
-	if (highestPivotY > -700* this.fp) {
+	if (highestPivotY > -400* this.fp) {
 		this.pivots.push(this.getNewPivot(
 			this.getRandomPivotX(), highestPivotY - 60 - Math.random() * 100, 
 			this.getRandomPivotRadius()));

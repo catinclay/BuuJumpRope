@@ -1,12 +1,15 @@
 // Simple class example
 
-function Boss(fp, globalSpeed, canvasWidth, canvasHeight, posX, posY, attackWaves) {
+function Boss(fp, globalSpeed, soundManager, canvasWidth, canvasHeight, posX, posY, image, attackWaves) {
 		this.x = posX * fp;
 		this.y = posY * fp;
 		this.fp = fp;
 		this.globalSpeed = globalSpeed;
+		this.soundManager = soundManager;
 		this.canvasWidth = canvasWidth;
 		this.canvasHeight = canvasHeight;
+		this.image = image;
+
 		this.velX = 0;
 		this.velY = 0;
 		this.accelX = 0;
@@ -19,14 +22,24 @@ function Boss(fp, globalSpeed, canvasWidth, canvasHeight, posX, posY, attackWave
 		this.displayHp = this.hp;
 		this.isDead = false;
 
+
 		// Attack
 		this.attackCountDown = 180;
 		this.attackPeriod = 180;
 		this.attackWaves = attackWaves;
 		this.attackWavesIndexCD = [0, 0, 0, 0, 0, 0];
+
+		// Damaged animation
+		this.damagedAnimationDuration = 16;
+		this.damagedAnimationTimer = 0;
 }
 
 Boss.prototype.update = function() {
+
+	if (this.damagedAnimationTimer >= 0) {
+		this.damagedAnimationTimer  -= this.globalSpeed["ratio"];
+	}
+
 	this.attackCountDown--;
 	if (this.attackCountDown <= 0) {
 		this.attackCountDown = this.attackPeriod;
@@ -65,7 +78,24 @@ Boss.prototype.attack = function() {
 	this.attackWavesIndexCD[randomIndex] = newAttackWave.defaultForecastCounter * 5;
 }
 
+// Return knockback dis if hit.
+// 0 = not hit
+Boss.prototype.isHit = function(bx, by) {
+	// return by <= this.y;
+	let disX = Math.abs(bx - this.x);
+	let disY = by - this.y;
+	if(disX <= 85 * this.fp && disY <= 35 * this.fp) {
+		return 2 * (35 * this.fp - disY);
+	} else if (disY <= 5 * this.fp) {
+		return 2 * (5 * this.fp - disY);
+	}
+	return 0;
+}
+
 Boss.prototype.damage = function(attack) {
+	if (this.damagedAnimationTimer > 0) { return; }
+	this.soundManager.play("boss-hit");
+	this.damagedAnimationTimer = this.damagedAnimationDuration;
 	this.hp -= attack;
 	if (this.hp < 0) { this.hp = 0; }
 }
@@ -79,10 +109,23 @@ Boss.prototype.camMove = function(dy) {
 
 //A function for drawing the particle.
 Boss.prototype.drawToContext = function(theContext) {
-	let margin = 3 * this.fp;
-	theContext.fillStyle = this.color;
-	theContext.fillRect(this.x - this.width/2 + margin, this.y - this.height, this.width - 2 * margin, this.height);
+	
+	// let margin = 3 * this.fp;
+	// theContext.fillStyle = this.color;
+	// theContext.fillRect(this.x - this.width/2 + margin, this.y - this.height, this.width - 2 * margin, this.height);
 
+	// Boss Image
+	theContext.save();
+	theContext.translate(this.x,this.y+35*this.fp);
+	if (Math.floor(this.damagedAnimationTimer / 4) % 2 == 0) {
+		theContext.globalAlpha = 0.5;
+	}
+  	theContext.drawImage(this.image, 
+  		-this.image.width/2, 
+  		-this.image.height - this.damagedAnimationTimer * this.fp);
+  	theContext.restore();
+
+	// Boss hp
 	let hpBoarderWidth = 2 * this.fp;
 	let hpSlotXDis = 30 * this.fp;
 	let hpSlotYDis = 40 * this.fp;

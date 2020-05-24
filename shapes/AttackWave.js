@@ -30,7 +30,7 @@ AttackWave.prototype.update = function() {
 		}
 	} else {
 		this.onGoingAttackTimer++;
-		if (this.onGoingAttackTimer >= this.defaultForecastCounter * 2) {
+		if (this.onGoingAttackTimer >= this.defaultForecastCounter * 1.8) {
 			this.destroySoon = true;
 		}
 	}
@@ -49,11 +49,11 @@ AttackWave.prototype.drawToContext = function(theContext) {
 		theContext.fillStyle = "rgba(255, 0, 0, " + a + ")";
 		theContext.fillRect(this.x - this.width/2, this.y, this.width, this.height);
 	} else {
-		if (this.onGoingAttackTimer <= this.defaultForecastCounter) {
+		if (this.onGoingAttackTimer <= this.defaultForecastCounter * 7 / 8) {
 			theContext.fillStyle = "rgba(255, 0, 0, " + (0.2 + 0.3 * this.onGoingAttackTimer/this.defaultForecastCounter) + ")";
 			theContext.fillRect(this.x - this.width/2, this.y, this.width, this.height);
 		} else {
-			let attackAnimationProgress = Math.min(this.defaultForecastCounter/4, this.onGoingAttackTimer - this.defaultForecastCounter) / (this.defaultForecastCounter/4);
+			let attackAnimationProgress = Math.min(this.defaultForecastCounter/4, this.onGoingAttackTimer - this.defaultForecastCounter* 7 / 8) / (this.defaultForecastCounter/4);
 			let spikeWidth = 10 * this.fp;
 			let spikeHeight = 20 * this.fp;
 			theContext.beginPath();

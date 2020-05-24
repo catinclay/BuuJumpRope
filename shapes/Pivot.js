@@ -33,6 +33,8 @@ function Pivot(fp, globalSpeed, canvasWidth, canvasHeight, posX, posY, radius, p
 	this.limitBreakCounter = 0;
 
 	this.isSuperPivot = false;
+	this.defaultSuperPivotAnimationTimer = 60;
+	this.superPivotAnimationTimer = 0;
 
 	this.isShowingLimitBreak = false;
 }
@@ -43,6 +45,16 @@ Pivot.prototype.setUsed = function(isBossBattle) {
 }
 
 Pivot.prototype.update = function() {
+
+	// super pivot animation
+	if (this.isSuperPivot && (this.isHooked || !this.isUsed)) {
+		this.superPivotAnimationTimer++;
+		if (this.superPivotAnimationTimer >= this.defaultSuperPivotAnimationTimer) {
+			this.superPivotAnimationTimer = 0;
+		}
+	}
+
+
 	if (this.isUsed && this.isUsedTimer != -100) {
 		this.isUsedTimer-= this.globalSpeed["ratio"];
 		if(this.isUsedTimer <= 0) {
@@ -76,6 +88,16 @@ Pivot.prototype.triggerLimitBreak = function(speedBonus) {
 
 //A function for drawing the particle.
 Pivot.prototype.drawToContext = function(theContext) {
+
+	// super pivot animation
+	if (this.isSuperPivot && (this.isHooked || !this.isUsed)) {
+		let spaProgress = this.superPivotAnimationTimer / this.defaultSuperPivotAnimationTimer;
+		theContext.beginPath();
+		theContext.arc(this.x, this.y, this.radius * 3 * spaProgress, 0, 2 * Math.PI);
+		theContext.fillStyle = "rgba(255, 255, 0, " + (1 - spaProgress) + ")";
+		theContext.fill();
+	}
+
 	// draw the pivot
 	if (this.isAiming || this.isHooked) {
 		theContext.fillStyle = this.aimColor;

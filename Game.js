@@ -1,7 +1,7 @@
 function Game(){}
 
 Game.prototype.init = function(fp, canvasWidth, canvasHeight, imageManager, soundManager){
-	console.log("version: 1.10") // clean David test
+	console.log("version: 1.20") // clean David test
 	// flexible pixel.
 	this.fp = fp;
 	this.canvasWidth = canvasWidth;
@@ -28,7 +28,7 @@ Game.prototype.initGame = function() {
 	this.scoreBoard = new ScoreBoard(this.fp, this.canvasWidth, this.canvasHeight, this.camera);
 	this.scoreBoardHolder = [this.scoreBoard];
 
-	this.dungeonMaster = new DungeonMaster(this.fp, this.globalSpeed, this.canvasWidth, this.canvasHeight, this.camera, this.scoreBoard, this.pivots, this.mainBall, this.bossHolder, this.attackWaves);
+	this.dungeonMaster = new DungeonMaster(this.fp, this.globalSpeed, this.canvasWidth, this.canvasHeight, this.imageManager, this.soundManager, this.camera, this.scoreBoard, this.pivots, this.mainBall, this.bossHolder, this.attackWaves);
 
 	this.drawables.push(this.scoreBoardHolder);
 	this.drawables.push(this.attackWaves);
@@ -48,17 +48,19 @@ Game.prototype.checkGameOver = function() {
 }
 
 Game.prototype.update = function() {
-	this.checkGameOver();
 	if (this.gameOver) {
+		this.dungeonMaster.fadeOutBgm();
+
 		// Game over scene, clean up this
 		this.gameOverScene.setScore(this.scoreBoard.getScore());
 		this.gameOverScene.update();
 	} else {
+		this.checkGameOver();
 		this.mainBall.update();
 		this.camera.update();
 		this.scoreBoard.update();
+		this.dungeonMaster.update();
 	}
-	this.dungeonMaster.update();
 }
 
 Game.prototype.getDrawables = function() {
@@ -67,6 +69,7 @@ Game.prototype.getDrawables = function() {
 
 Game.prototype.inputDownListener = function(touchX, touchY) {
 	if (this.gameOverScene.readyToRestart()) {
+		this.dungeonMaster.stopBGM();
 		this.initGame();
 	} else {
 		this.mainBall.inputDown(); // charging
