@@ -24,8 +24,8 @@ function Boss(fp, globalSpeed, soundManager, canvasWidth, canvasHeight, posX, po
 
 
 		// Attack
-		this.attackCountDown = 180;
-		this.attackPeriod = 180;
+		this.attackCountDown = 220;
+		this.attackPeriod = 220;
 		this.attackWaves = attackWaves;
 		this.attackWavesIndexCD = [0, 0, 0, 0, 0, 0];
 

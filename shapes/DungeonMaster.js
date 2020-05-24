@@ -170,13 +170,10 @@ DungeonMaster.prototype.stopBGM = function() {
 }
 
 DungeonMaster.prototype.checkGameOver = function() {
-	if (!this.bossBattle) {
-		if (this.camera.getDeadLine() <= this.mainBall.y) {
-			this.mainBall.damaged();
-			this.mainBall.hp = 0;
-			return true;
-		}
-	} else if (this.mainBall.hp <= 0){
+	if (this.camera.getDeadLine() <= this.mainBall.y) {
+		this.mainBall.damaged();
+	}
+	if (this.mainBall.hp <= 0){
 		return true;
 	}
 	return false;
@@ -251,11 +248,11 @@ DungeonMaster.prototype.getRandomPivotX = function() {
 DungeonMaster.prototype.getRandomPivotRadius = function() {
 	let score = this.camera.getScore();
 	if (score < 50)
-		return Math.random() * 8 + Math.random() * 8 + 10;
+		return Math.random() * 10 + Math.random() * 8 + 10;
 	if (score < 100)
-		return Math.random() * 8 + Math.random() * 7 + 5;
+		return Math.random() * 8 + Math.random() * 7 + 7;
 	if (score < 150)
-		return Math.random() * 8 + Math.random() * 6 + 4;
+		return Math.random() * 8 + Math.random() * 6 + 5;
 	if (score < 200)
 		return Math.random() * 8 + Math.random() * 5 + 3;
 	if (score < 250)

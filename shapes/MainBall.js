@@ -110,6 +110,7 @@ MainBall.prototype.bossBattleUpdate = function() {
 			this.y = this.currentBossBattleGround;
 		}
 		if (this.currentBossBattleGround <= this.bossBattleGroundOffset && this.y == this.currentBossBattleGround) {
+			this.hp = 3;
 			this.bossBattleReady = true;
 			this.velY = 0;
 		}
@@ -131,7 +132,6 @@ MainBall.prototype.bossBattleUpdate = function() {
 				for (var i = boss.attackWaves.length - 1; i >= 0; i--) {
 					if(boss.attackWaves[i].hasDamage(this.y)) {
 						this.damaged();
-						this.hp--;
 					}
 				}
 			}
@@ -141,7 +141,6 @@ MainBall.prototype.bossBattleUpdate = function() {
 			if (knockBackDis!=0) {
 				this.y += knockBackDis;
 				if (this.velY < 0) { this.velY *= -1; }
-				// this.y -= 2 * (this.y - boss.y);
 				boss.damage(this.attack);
 				this.status = 0;
 			}
@@ -150,8 +149,16 @@ MainBall.prototype.bossBattleUpdate = function() {
 }
 
 MainBall.prototype.damaged = function() {
-	this.soundManager.play("mainball-hit");
-	this.invisibleTimer = this.invisibleDuration;
+	this.comboCount = 0;
+	if (this.invisibleTimer <= 0) {
+		this.hp--;		
+		this.invisibleTimer = this.invisibleDuration;
+	}
+
+	if (this.invisibleTimer == this.invisibleDuration || this.invisibleDuration - this.invisibleTimer >= 5) {
+		this.soundManager.play("mainball-hit");
+	}
+
 	this.status = 0;
 	this.velX /= 3;
 	this.velY = -6 * this.fp;
@@ -489,7 +496,7 @@ MainBall.prototype.drawToContext = function(theContext) {
 	}
 
 	// Hp
-	if (this.bossBattleReady || this.isHookingSuperPivot()) {
+	if (this.bossBattleReady || this.isHookingSuperPivot() || this.hp != this.maxHp) {
 		let hpY = this.y - this.radius - 10 * this.fp;
 		let hph = 6 * this.fp;
 		let hpX = this.x - 10 * this.fp;
