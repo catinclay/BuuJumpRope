@@ -41,7 +41,7 @@ function Pivot(fp, globalSpeed, canvasWidth, canvasHeight, posX, posY, radius, p
 
 Pivot.prototype.setUsed = function(isBossBattle) {
 	this.isUsed = true;
-	this.isUsedTimer = isBossBattle? 720 : -100;
+	this.isUsedTimer = isBossBattle? 600 : -100;
 }
 
 Pivot.prototype.update = function() {
