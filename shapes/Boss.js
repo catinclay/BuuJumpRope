@@ -40,7 +40,7 @@ Boss.prototype.update = function() {
 		this.damagedAnimationTimer  -= this.globalSpeed["ratio"];
 	}
 
-	this.attackCountDown--;
+	this.attackCountDown -= this.globalSpeed["ratio"];
 	if (this.attackCountDown <= 0) {
 		this.attackCountDown = this.attackPeriod;
 		this.attack();
